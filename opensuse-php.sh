@@ -1,5 +1,7 @@
-#!/bin/bash
-set -e
+#!/usr/bin/env bash
+set -euo pipefail
+[[ $EUID -ne 0 ]] && { echo "❌ Execute com sudo"; exit 1; }
+
 echo "=== Instalando PHP 8.5.6 no openSUSE ==="
 zypper addrepo https://download.opensuse.org/repositories/devel:languages:php/openSUSE_Tumbleweed/devel:languages:php.repo
 zypper refresh

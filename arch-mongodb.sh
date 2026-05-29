@@ -1,5 +1,7 @@
-#!/bin/bash
-set -e
+#!/usr/bin/env bash
+set -euo pipefail
+[[ $EUID -ne 0 ]] && { echo "❌ Execute com sudo"; exit 1; }
+
 echo "=== Instalando MongoDB 8.3 no Arch ==="
 # Usando pacotes do AUR ou repositório não oficial? Vamos usar o repositório oficial do MongoDB para Debian (via script) - adaptado para Arch.
 # Infelizmente o MongoDB não fornece repositório nativo para Arch, então usamos AUR via yay ou baixamos binário.

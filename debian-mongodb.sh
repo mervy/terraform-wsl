@@ -1,5 +1,7 @@
-#!/bin/bash
-set -e
+#!/usr/bin/env bash
+set -euo pipefail
+[[ $EUID -ne 0 ]] && { echo "❌ Execute com sudo"; exit 1; }
+
 echo "=== Instalando MongoDB 8.3 no Debian ==="
 curl -fsSL https://www.mongodb.org/static/pgp/server-8.3.asc | gpg -o /usr/share/keyrings/mongodb-server-8.3.gpg --dearmor
 echo "deb [ signed-by=/usr/share/keyrings/mongodb-server-8.3.gpg ] https://repo.mongodb.org/apt/debian bookworm/mongodb-org/8.3 main" | tee /etc/apt/sources.list.d/mongodb-org-8.3.list

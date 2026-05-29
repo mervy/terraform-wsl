@@ -1,5 +1,7 @@
-#!/bin/bash
-set -e
+#!/usr/bin/env bash
+set -euo pipefail
+[[ $EUID -ne 0 ]] && { echo "❌ Execute com sudo"; exit 1; }
+
 echo "=== Instalando PHP 8.5.6 no Fedora (Remi) ==="
 dnf install -y https://rpms.remirepo.net/fedora/remi-release-$(rpm -E %fedora).rpm
 dnf module reset php -y

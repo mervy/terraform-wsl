@@ -1,5 +1,7 @@
-#!/bin/bash
-set -e
+#!/usr/bin/env bash
+set -euo pipefail
+[[ $EUID -ne 0 ]] && { echo "❌ Execute com sudo"; exit 1; }
+
 echo "=== Instalando MySQL 9.7 via tarball no Arch ==="
 cd /tmp
 wget https://dev.mysql.com/get/Downloads/MySQL-9.7/mysql-9.7.2-linux-glibc2.28-x86_64.tar.xz

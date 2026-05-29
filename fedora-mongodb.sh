@@ -1,5 +1,7 @@
-#!/bin/bash
-set -e
+#!/usr/bin/env bash
+set -euo pipefail
+[[ $EUID -ne 0 ]] && { echo "❌ Execute com sudo"; exit 1; }
+
 echo "=== Instalando MongoDB 8.3 no Fedora ==="
 cat > /etc/yum.repos.d/mongodb-org-8.3.repo <<EOF
 [mongodb-org-8.3]

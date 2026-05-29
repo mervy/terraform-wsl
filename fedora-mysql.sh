@@ -1,5 +1,7 @@
-#!/bin/bash
-set -e
+#!/usr/bin/env bash
+set -euo pipefail
+[[ $EUID -ne 0 ]] && { echo "❌ Execute com sudo"; exit 1; }
+
 echo "=== Instalando MySQL 9.7 no Fedora ==="
 dnf install -y https://dev.mysql.com/get/mysql84-community-release-fc$(rpm -E %fedora).noarch.rpm
 dnf install -y mysql-community-server

@@ -1,5 +1,7 @@
-#!/bin/bash
-set -e
+#!/usr/bin/env bash
+set -euo pipefail
+[[ $EUID -ne 0 ]] && { echo "❌ Execute com sudo"; exit 1; }
+
 echo "=== Instalando MySQL 9.7 no Debian ==="
 wget https://dev.mysql.com/get/mysql-apt-config_0.8.33-1_all.deb
 dpkg -i mysql-apt-config_0.8.33-1_all.deb

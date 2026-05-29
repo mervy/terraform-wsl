@@ -1,5 +1,7 @@
-#!/bin/bash
-set -e
+#!/usr/bin/env bash
+set -euo pipefail
+[[ $EUID -ne 0 ]] && { echo "❌ Execute com sudo"; exit 1; }
+
 echo "=== Instalando MySQL 9.7 no openSUSE ==="
 zypper addrepo https://repo.mysql.com/yum/mysql-9.7-community/suse/mysql-9.7-community.suse.repo
 zypper refresh

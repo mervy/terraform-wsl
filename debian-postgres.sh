@@ -1,5 +1,7 @@
-#!/bin/bash
-set -e
+#!/usr/bin/env bash
+set -euo pipefail
+[[ $EUID -ne 0 ]] && { echo "❌ Execute com sudo"; exit 1; }
+
 echo "=== Instalando PostgreSQL no Debian ==="
 apt install -y postgresql postgresql-contrib
 systemctl enable --now postgresql

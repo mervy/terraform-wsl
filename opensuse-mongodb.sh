@@ -1,5 +1,7 @@
-#!/bin/bash
-set -e
+#!/usr/bin/env bash
+set -euo pipefail
+[[ $EUID -ne 0 ]] && { echo "❌ Execute com sudo"; exit 1; }
+
 echo "=== Instalando MongoDB 8.3 no openSUSE ==="
 rpm --import https://www.mongodb.org/static/pgp/server-8.3.asc
 zypper addrepo --gpgcheck "https://repo.mongodb.org/zypper/suse/15/mongodb-org/8.3/x86_64/" mongodb
