@@ -1,0 +1,653 @@
+
+## 🟦 FEDORA
+
+<details>
+<summary><code>fedora-essentials.sh</code></summary>
+
+```bash
+#!/usr/bin/env bash
+set -euo pipefail
+[[ $EUID -ne 0 ]] && { echo "❌ Execute com sudo"; exit 1; }
+dnf update -y
+dnf install -y curl rar unrar wget git gh
+echo "✅ fedora-essentials concluído!"
+```
+</details>
+
+<details>
+<summary><code>fedora-nginx.sh</code></summary>
+
+```bash
+#!/usr/bin/env bash
+set -euo pipefail
+[[ $EUID -ne 0 ]] && { echo "❌ Execute com sudo"; exit 1; }
+dnf install -y 'dnf-command(config-manager)' nginx
+dnf config-manager --add-repo https://nginx.org/packages/fedora/$(rpm -E %fedora)/nginx.repo
+dnf install -y nginx
+systemctl enable --now nginx
+echo "✅ fedora-nginx concluído!"
+```
+</details>
+
+<details>
+<summary><code>fedora-node-nvm.sh</code></summary>
+
+```bash
+#!/usr/bin/env bash
+set -euo pipefail
+[[ $EUID -ne 0 ]] && { echo "❌ Execute com sudo"; exit 1; }
+export NVM_DIR="$HOME/.nvm" && mkdir -p "$NVM_DIR"
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+nvm install node
+echo 'export NVM_DIR="$HOME/.nvm"; [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"' >> ~/.bashrc
+echo "✅ fedora-node-nvm concluído! Rode: source ~/.bashrc"
+```
+</details>
+
+<details>
+<summary><code>fedora-php.sh</code></summary>
+
+```bash
+#!/usr/bin/env bash
+set -euo pipefail
+[[ $EUID -ne 0 ]] && { echo "❌ Execute com sudo"; exit 1; }
+dnf install -y https://rpms.remirepo.net/fedora/remi-release-$(rpm -E %fedora).rpm
+dnf module reset php -y
+dnf module enable php:remi-8.4 -y || dnf module enable php:remi-8.5 -y
+dnf install -y php php-cli php-fpm php-mysqlnd php-pgsql php-mbstring php-xml php-curl php-zip
+systemctl enable --now php-fpm
+echo "✅ fedora-php concluído!"
+```
+</details>
+
+<details>
+<summary><code>fedora-rust.sh</code></summary>
+
+```bash
+#!/usr/bin/env bash
+set -euo pipefail
+[[ $EUID -ne 0 ]] && { echo "❌ Execute com sudo"; exit 1; }
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+source $HOME/.cargo/env
+echo 'source $HOME/.cargo/env' >> ~/.bashrc
+echo "✅ fedora-rust concluído!"
+```
+</details>
+
+<details>
+<summary><code>fedora-go.sh</code></summary>
+
+```bash
+#!/usr/bin/env bash
+set -euo pipefail
+[[ $EUID -ne 0 ]] && { echo "❌ Execute com sudo"; exit 1; }
+GO_VER=$(curl -s https://go.dev/VERSION?m=text | head -n1 | sed 's/go//')
+wget -q "https://go.dev/dl/${GO_VER}.linux-amd64.tar.gz" -O /tmp/go.tar.gz
+rm -rf /usr/local/go && tar -C /usr/local -xzf /tmp/go.tar.gz
+echo 'export PATH=$PATH:/usr/local/go/bin' | tee /etc/profile.d/go.sh
+export PATH=$PATH:/usr/local/go/bin
+echo "✅ fedora-go concluído!"
+```
+</details>
+
+<details>
+<summary><code>fedora-python.sh</code></summary>
+
+```bash
+#!/usr/bin/env bash
+set -euo pipefail
+[[ $EUID -ne 0 ]] && { echo "❌ Execute com sudo"; exit 1; }
+dnf install -y python3 python3-pip python3-devel
+echo "✅ fedora-python concluído!"
+```
+</details>
+
+<details>
+<summary><code>fedora-mysql.sh</code></summary>
+
+```bash
+#!/usr/bin/env bash
+set -euo pipefail
+[[ $EUID -ne 0 ]] && { echo "❌ Execute com sudo"; exit 1; }
+dnf install -y https://dev.mysql.com/get/mysql90-community-release-fc$(rpm -E %fedora)-noarch.rpm
+dnf install -y mysql-community-server
+systemctl enable --now mysqld
+sleep 4
+mysql -u root -e "ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY 'M1nh*S_3n7A';" 2>/dev/null || true
+mysql -u root -p'M1nh*S_3n7A' -e "CREATE USER IF NOT EXISTS 'admin'@'localhost' IDENTIFIED BY 'M1nh*S_3n7A'; GRANT ALL PRIVILEGES ON *.* TO 'admin'@'localhost' WITH GRANT OPTION; FLUSH PRIVILEGES;" 2>/dev/null || true
+echo "✅ fedora-mysql concluído!"
+```
+</details>
+
+<details>
+<summary><code>fedora-postgresql.sh</code></summary>
+
+```bash
+#!/usr/bin/env bash
+set -euo pipefail
+[[ $EUID -ne 0 ]] && { echo "❌ Execute com sudo"; exit 1; }
+dnf install -y https://download.postgresql.org/pub/repos/yum/reporpms/F-$(rpm -E %fedora)-x86_64/pgdg-fedora-repo-latest.noarch.rpm
+dnf install -y postgresql16-server postgresql16
+/usr/pgsql-16/bin/postgresql-16-setup initdb 2>/dev/null || true
+systemctl enable --now postgresql-16
+sleep 3
+sudo -u postgres psql -c "ALTER USER postgres PASSWORD 'M1nh*S_3n7A';" 2>/dev/null || true
+sudo -u postgres psql -c "CREATE ROLE admin WITH LOGIN SUPERUSER PASSWORD 'M1nh*S_3n7A';" 2>/dev/null || true
+echo "✅ fedora-postgresql concluído!"
+```
+</details>
+
+<details>
+<summary><code>fedora-mongodb.sh</code></summary>
+
+```bash
+#!/usr/bin/env bash
+set -euo pipefail
+[[ $EUID -ne 0 ]] && { echo "❌ Execute com sudo"; exit 1; }
+cat > /etc/yum.repos.d/mongodb-org-8.0.repo <<EOF
+[mongodb-org-8.0]
+name=MongoDB Repository
+baseurl=https://repo.mongodb.org/yum/redhat/9/mongodb-org/8.0/x86_64/
+gpgcheck=1 enabled=1
+gpgkey=https://www.mongodb.org/static/pgp/server-8.0.asc
+EOF
+dnf install -y mongodb-org mongodb-mongosh mongodb-database-tools
+systemctl enable --now mongod
+sleep 4
+mongosh --eval "db.createUser({user:'admin',pwd:'M1nh*S_3n7A',roles:[{role:'userAdminAnyDatabase',db:'admin'},'root']})" 2>/dev/null || true
+echo "✅ fedora-mongodb concluído!"
+```
+</details>
+
+---
+
+## 🐧 ARCH LINUX
+
+<details>
+<summary><code>arch-essentials.sh</code></summary>
+
+```bash
+#!/usr/bin/env bash
+set -euo pipefail
+[[ $EUID -ne 0 ]] && { echo "❌ Execute com sudo"; exit 1; }
+pacman -Sy --noconfirm curl rar unrar wget git github-cli
+echo "✅ arch-essentials concluído!"
+```
+</details>
+
+<details>
+<summary><code>arch-nginx.sh</code></summary>
+
+```bash
+#!/usr/bin/env bash
+set -euo pipefail
+[[ $EUID -ne 0 ]] && { echo "❌ Execute com sudo"; exit 1; }
+pacman -S --noconfirm nginx
+systemctl enable --now nginx
+echo "✅ arch-nginx concluído!"
+```
+</details>
+
+<details>
+<summary><code>arch-node-nvm.sh</code></summary>
+
+```bash
+#!/usr/bin/env bash
+set -euo pipefail
+[[ $EUID -ne 0 ]] && { echo "❌ Execute com sudo"; exit 1; }
+export NVM_DIR="$HOME/.nvm" && mkdir -p "$NVM_DIR"
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+nvm install node
+echo 'export NVM_DIR="$HOME/.nvm"; [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"' >> ~/.bashrc
+echo "✅ arch-node-nvm concluído! Rode: source ~/.bashrc"
+```
+</details>
+
+<details>
+<summary><code>arch-php.sh</code></summary>
+
+```bash
+#!/usr/bin/env bash
+set -euo pipefail
+[[ $EUID -ne 0 ]] && { echo "❌ Execute com sudo"; exit 1; }
+pacman -S --noconfirm php php-fpm php-pgsql php-pdo_mysql php-mbstring php-xml php-curl php-zip php-pear
+systemctl enable --now php-fpm
+echo "✅ arch-php concluído!"
+```
+</details>
+
+<details>
+<summary><code>arch-rust.sh</code></summary>
+
+```bash
+#!/usr/bin/env bash
+set -euo pipefail
+[[ $EUID -ne 0 ]] && { echo "❌ Execute com sudo"; exit 1; }
+pacman -S --noconfirm rustup
+rustup default stable
+echo 'source $HOME/.cargo/env' >> ~/.bashrc
+echo "✅ arch-rust concluído!"
+```
+</details>
+
+<details>
+<summary><code>arch-go.sh</code></summary>
+
+```bash
+#!/usr/bin/env bash
+set -euo pipefail
+[[ $EUID -ne 0 ]] && { echo "❌ Execute com sudo"; exit 1; }
+pacman -S --noconfirm go
+echo 'export PATH=$PATH:/usr/lib/go/bin' >> ~/.bashrc
+export PATH=$PATH:/usr/lib/go/bin
+echo "✅ arch-go concluído!"
+```
+</details>
+
+<details>
+<summary><code>arch-python.sh</code></summary>
+
+```bash
+#!/usr/bin/env bash
+set -euo pipefail
+[[ $EUID -ne 0 ]] && { echo "❌ Execute com sudo"; exit 1; }
+pacman -S --noconfirm python python-pip
+echo "✅ arch-python concluído!"
+```
+</details>
+
+<details>
+<summary><code>arch-mysql.sh</code></summary>
+
+```bash
+#!/usr/bin/env bash
+set -euo pipefail
+[[ $EUID -ne 0 ]] && { echo "❌ Execute com sudo"; exit 1; }
+# Arch usa MariaDB por padrão (100% compatível com MySQL)
+pacman -S --noconfirm mariadb
+mysql_install_db --user=mysql --basedir=/usr --datadir=/var/lib/mysql 2>/dev/null || true
+systemctl enable --now mariadb
+sleep 4
+mysql -u root -e "SET PASSWORD FOR 'root'@'localhost' = PASSWORD('M1nh*S_3n7A'); FLUSH PRIVILEGES;" 2>/dev/null || true
+mysql -u root -p'M1nh*S_3n7A' -e "CREATE USER IF NOT EXISTS 'admin'@'localhost' IDENTIFIED BY 'M1nh*S_3n7A'; GRANT ALL PRIVILEGES ON *.* TO 'admin'@'localhost' WITH GRANT OPTION; FLUSH PRIVILEGES;" 2>/dev/null || true
+echo "✅ arch-mysql (mariadb) concluído!"
+```
+</details>
+
+<details>
+<summary><code>arch-postgresql.sh</code></summary>
+
+```bash
+#!/usr/bin/env bash
+set -euo pipefail
+[[ $EUID -ne 0 ]] && { echo "❌ Execute com sudo"; exit 1; }
+pacman -S --noconfirm postgresql
+[ ! -f /var/lib/postgres/data/PG_VERSION ] && sudo -u postgres initdb -D /var/lib/postgres/data
+systemctl enable --now postgresql
+sleep 3
+sudo -u postgres psql -c "ALTER USER postgres PASSWORD 'M1nh*S_3n7A';" 2>/dev/null || true
+sudo -u postgres psql -c "CREATE ROLE admin WITH LOGIN SUPERUSER PASSWORD 'M1nh*S_3n7A';" 2>/dev/null || true
+echo "✅ arch-postgresql concluído!"
+```
+</details>
+
+<details>
+<summary><code>arch-mongodb.sh</code></summary>
+
+```bash
+#!/usr/bin/env bash
+set -euo pipefail
+[[ $EUID -ne 0 ]] && { echo "❌ Execute com sudo"; exit 1; }
+cat > /etc/pacman.d/mongodb.repo <<EOF
+[mongodb]
+Server = https://repo.mongodb.org/pacman/arch/\$arch/
+SigLevel = Never
+EOF
+pacman -Sy --noconfirm mongodb mongodb-tools mongodb-mongosh
+systemctl enable --now mongod
+sleep 4
+mongosh --eval "db.createUser({user:'admin',pwd:'M1nh*S_3n7A',roles:[{role:'userAdminAnyDatabase',db:'admin'},'root']})" 2>/dev/null || true
+echo "✅ arch-mongodb concluído!"
+```
+</details>
+
+---
+
+## 🦎 OPENSUSE
+
+<details>
+<summary><code>opensuse-essentials.sh</code></summary>
+
+```bash
+#!/usr/bin/env bash
+set -euo pipefail
+[[ $EUID -ne 0 ]] && { echo "❌ Execute com sudo"; exit 1; }
+zypper --non-interactive ref && zypper --non-interactive install curl rar unrar wget git gh
+echo "✅ opensuse-essentials concluído!"
+```
+</details>
+
+<details>
+<summary><code>opensuse-nginx.sh</code></summary>
+
+```bash
+#!/usr/bin/env bash
+set -euo pipefail
+[[ $EUID -ne 0 ]] && { echo "❌ Execute com sudo"; exit 1; }
+zypper --non-interactive install nginx
+systemctl enable --now nginx
+echo "✅ opensuse-nginx concluído!"
+```
+</details>
+
+<details>
+<summary><code>opensuse-node-nvm.sh</code></summary>
+
+```bash
+#!/usr/bin/env bash
+set -euo pipefail
+[[ $EUID -ne 0 ]] && { echo "❌ Execute com sudo"; exit 1; }
+export NVM_DIR="$HOME/.nvm" && mkdir -p "$NVM_DIR"
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+nvm install node
+echo 'export NVM_DIR="$HOME/.nvm"; [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"' >> ~/.bashrc
+echo "✅ opensuse-node-nvm concluído! Rode: source ~/.bashrc"
+```
+</details>
+
+<details>
+<summary><code>opensuse-php.sh</code></summary>
+
+```bash
+#!/usr/bin/env bash
+set -euo pipefail
+[[ $EUID -ne 0 ]] && { echo "❌ Execute com sudo"; exit 1; }
+zypper --non-interactive install php8 php8-fpm php8-pgsql php8-mysql php8-mbstring php8-xml php8-curl php8-zip
+systemctl enable --now php-fpm
+echo "✅ opensuse-php concluído!"
+```
+</details>
+
+<details>
+<summary><code>opensuse-rust.sh</code></summary>
+
+```bash
+#!/usr/bin/env bash
+set -euo pipefail
+[[ $EUID -ne 0 ]] && { echo "❌ Execute com sudo"; exit 1; }
+zypper --non-interactive install rustup
+rustup default stable
+echo 'source $HOME/.cargo/env' >> ~/.bashrc
+echo "✅ opensuse-rust concluído!"
+```
+</details>
+
+<details>
+<summary><code>opensuse-go.sh</code></summary>
+
+```bash
+#!/usr/bin/env bash
+set -euo pipefail
+[[ $EUID -ne 0 ]] && { echo "❌ Execute com sudo"; exit 1; }
+zypper --non-interactive install go
+echo 'export PATH=$PATH:/usr/lib64/go/bin' >> ~/.bashrc
+export PATH=$PATH:/usr/lib64/go/bin
+echo "✅ opensuse-go concluído!"
+```
+</details>
+
+<details>
+<summary><code>opensuse-python.sh</code></summary>
+
+```bash
+#!/usr/bin/env bash
+set -euo pipefail
+[[ $EUID -ne 0 ]] && { echo "❌ Execute com sudo"; exit 1; }
+zypper --non-interactive install python3 python3-pip
+echo "✅ opensuse-python concluído!"
+```
+</details>
+
+<details>
+<summary><code>opensuse-mysql.sh</code></summary>
+
+```bash
+#!/usr/bin/env bash
+set -euo pipefail
+[[ $EUID -ne 0 ]] && { echo "❌ Execute com sudo"; exit 1; }
+zypper --non-interactive install mariadb
+mysql_install_db --user=mysql 2>/dev/null || true
+systemctl enable --now mariadb
+sleep 4
+mysql -u root -e "SET PASSWORD FOR 'root'@'localhost' = PASSWORD('M1nh*S_3n7A'); FLUSH PRIVILEGES;" 2>/dev/null || true
+mysql -u root -p'M1nh*S_3n7A' -e "CREATE USER IF NOT EXISTS 'admin'@'localhost' IDENTIFIED BY 'M1nh*S_3n7A'; GRANT ALL PRIVILEGES ON *.* TO 'admin'@'localhost' WITH GRANT OPTION; FLUSH PRIVILEGES;" 2>/dev/null || true
+echo "✅ opensuse-mysql (mariadb) concluído!"
+```
+</details>
+
+<details>
+<summary><code>opensuse-postgresql.sh</code></summary>
+
+```bash
+#!/usr/bin/env bash
+set -euo pipefail
+[[ $EUID -ne 0 ]] && { echo "❌ Execute com sudo"; exit 1; }
+zypper --non-interactive install postgresql
+[ ! -f /var/lib/pgsql/data/PG_VERSION ] && sudo -u postgres initdb -D /var/lib/pgsql/data
+systemctl enable --now postgresql
+sleep 3
+sudo -u postgres psql -c "ALTER USER postgres PASSWORD 'M1nh*S_3n7A';" 2>/dev/null || true
+sudo -u postgres psql -c "CREATE ROLE admin WITH LOGIN SUPERUSER PASSWORD 'M1nh*S_3n7A';" 2>/dev/null || true
+echo "✅ opensuse-postgresql concluído!"
+```
+</details>
+
+<details>
+<summary><code>opensuse-mongodb.sh</code></summary>
+
+```bash
+#!/usr/bin/env bash
+set -euo pipefail
+[[ $EUID -ne 0 ]] && { echo "❌ Execute com sudo"; exit 1; }
+zypper --non-interactive addrepo --gpgcheck --no-refresh "https://repo.mongodb.org/zypper/suse/15/mongodb-org/8.0/x86_64/" mongodb
+zypper --non-interactive install mongodb-org mongodb-database-tools mongodb-mongosh
+systemctl enable --now mongod
+sleep 4
+mongosh --eval "db.createUser({user:'admin',pwd:'M1nh*S_3n7A',roles:[{role:'userAdminAnyDatabase',db:'admin'},'root']})" 2>/dev/null || true
+echo "✅ opensuse-mongodb concluído!"
+```
+</details>
+
+---
+
+## 🐎 DEBIAN
+
+<details>
+<summary><code>debian-essentials.sh</code></summary>
+
+```bash
+#!/usr/bin/env bash
+set -euo pipefail
+export DEBIAN_FRONTEND=noninteractive
+[[ $EUID -ne 0 ]] && { echo "❌ Execute com sudo"; exit 1; }
+apt update && apt install -y curl rar unrar wget git gh
+echo "✅ debian-essentials concluído!"
+```
+</details>
+
+<details>
+<summary><code>debian-nginx.sh</code></summary>
+
+```bash
+#!/usr/bin/env bash
+set -euo pipefail
+export DEBIAN_FRONTEND=noninteractive
+[[ $EUID -ne 0 ]] && { echo "❌ Execute com sudo"; exit 1; }
+curl -fsSL https://nginx.org/keys/nginx_signing.key | gpg --dearmor | tee /etc/apt/trusted.gpg.d/nginx-archive-keyring.gpg >/dev/null
+echo "deb [signed-by=/etc/apt/trusted.gpg.d/nginx-archive-keyring.gpg] http://nginx.org/packages/debian $(lsb_release -cs) nginx" | tee /etc/apt/sources.list.d/nginx.list
+apt update && apt install -y nginx
+systemctl enable --now nginx
+echo "✅ debian-nginx concluído!"
+```
+</details>
+
+<details>
+<summary><code>debian-node-nvm.sh</code></summary>
+
+```bash
+#!/usr/bin/env bash
+set -euo pipefail
+[[ $EUID -ne 0 ]] && { echo "❌ Execute com sudo"; exit 1; }
+export NVM_DIR="$HOME/.nvm" && mkdir -p "$NVM_DIR"
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+nvm install node
+echo 'export NVM_DIR="$HOME/.nvm"; [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"' >> ~/.bashrc
+echo "✅ debian-node-nvm concluído! Rode: source ~/.bashrc"
+```
+</details>
+
+<details>
+<summary><code>debian-php.sh</code></summary>
+
+```bash
+#!/usr/bin/env bash
+set -euo pipefail
+export DEBIAN_FRONTEND=noninteractive
+[[ $EUID -ne 0 ]] && { echo "❌ Execute com sudo"; exit 1; }
+apt install -y software-properties-common
+add-apt-repository -y ppa:ondrej/php
+apt update && apt install -y php8.5 php8.5-fpm php8.5-pgsql php8.5-mysql php8.5-mbstring php8.5-xml php8.5-curl php8.5-zip
+systemctl enable --now php8.5-fpm
+echo "✅ debian-php concluído!"
+```
+</details>
+
+<details>
+<summary><code>debian-rust.sh</code></summary>
+
+```bash
+#!/usr/bin/env bash
+set -euo pipefail
+[[ $EUID -ne 0 ]] && { echo "❌ Execute com sudo"; exit 1; }
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+source $HOME/.cargo/env
+echo 'source $HOME/.cargo/env' >> ~/.bashrc
+echo "✅ debian-rust concluído!"
+```
+</details>
+
+<details>
+<summary><code>debian-go.sh</code></summary>
+
+```bash
+#!/usr/bin/env bash
+set -euo pipefail
+[[ $EUID -ne 0 ]] && { echo "❌ Execute com sudo"; exit 1; }
+apt install -y golang
+echo 'export PATH=$PATH:/usr/lib/go/bin' >> ~/.bashrc
+export PATH=$PATH:/usr/lib/go/bin
+echo "✅ debian-go concluído!"
+```
+</details>
+
+<details>
+<summary><code>debian-python.sh</code></summary>
+
+```bash
+#!/usr/bin/env bash
+set -euo pipefail
+[[ $EUID -ne 0 ]] && { echo "❌ Execute com sudo"; exit 1; }
+apt install -y python3 python3-pip python3-venv
+echo "✅ debian-python concluído!"
+```
+</details>
+
+<details>
+<summary><code>debian-mysql.sh</code></summary>
+
+```bash
+#!/usr/bin/env bash
+set -euo pipefail
+export DEBIAN_FRONTEND=noninteractive
+[[ $EUID -ne 0 ]] && { echo "❌ Execute com sudo"; exit 1; }
+wget -qO- https://repo.mysql.com/RPM-GPG-KEY-mysql-2023 | gpg --dearmor -o /etc/apt/trusted.gpg.d/mysql.gpg
+echo "deb [signed-by=/etc/apt/trusted.gpg.d/mysql.gpg] https://repo.mysql.com/apt/debian/ $(lsb_release -cs) mysql-9.0" | tee /etc/apt/sources.list.d/mysql.list
+apt update && apt install -y mysql-community-server
+systemctl enable --now mysql
+sleep 4
+mysql -u root -e "ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY 'M1nh*S_3n7A';" 2>/dev/null || true
+mysql -u root -p'M1nh*S_3n7A' -e "CREATE USER IF NOT EXISTS 'admin'@'localhost' IDENTIFIED BY 'M1nh*S_3n7A'; GRANT ALL PRIVILEGES ON *.* TO 'admin'@'localhost' WITH GRANT OPTION; FLUSH PRIVILEGES;" 2>/dev/null || true
+echo "✅ debian-mysql concluído!"
+```
+</details>
+
+<details>
+<summary><code>debian-postgresql.sh</code></summary>
+
+```bash
+#!/usr/bin/env bash
+set -euo pipefail
+export DEBIAN_FRONTEND=noninteractive
+[[ $EUID -ne 0 ]] && { echo "❌ Execute com sudo"; exit 1; }
+curl -fsSL https://www.postgresql.org/media/keys/ACCC4CF8.asc | gpg --dearmor -o /etc/apt/trusted.gpg.d/postgresql.gpg
+echo "deb [signed-by=/etc/apt/trusted.gpg.d/postgresql.gpg] http://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" | tee /etc/apt/sources.list.d/pgdg.list
+apt update && apt install -y postgresql-16
+systemctl enable --now postgresql
+sleep 3
+sudo -u postgres psql -c "ALTER USER postgres PASSWORD 'M1nh*S_3n7A';" 2>/dev/null || true
+sudo -u postgres psql -c "CREATE ROLE admin WITH LOGIN SUPERUSER PASSWORD 'M1nh*S_3n7A';" 2>/dev/null || true
+echo "✅ debian-postgresql concluído!"
+```
+</details>
+
+<details>
+<summary><code>debian-mongodb.sh</code></summary>
+
+```bash
+#!/usr/bin/env bash
+set -euo pipefail
+export DEBIAN_FRONTEND=noninteractive
+[[ $EUID -ne 0 ]] && { echo "❌ Execute com sudo"; exit 1; }
+curl -fsSL https://www.mongodb.org/static/pgp/server-8.0.asc | gpg --dearmor -o /etc/apt/trusted.gpg.d/mongodb.gpg
+echo "deb [signed-by=/etc/apt/trusted.gpg.d/mongodb.gpg] https://repo.mongodb.org/apt/debian $(lsb_release -cs)/mongodb-org/8.0 main" | tee /etc/apt/sources.list.d/mongodb-org.list
+apt update && apt install -y mongodb-org mongodb-mongosh mongodb-database-tools
+systemctl enable --now mongod
+sleep 4
+mongosh --eval "db.createUser({user:'admin',pwd:'M1nh*S_3n7A',roles:[{role:'userAdminAnyDatabase',db:'admin'},'root']})" 2>/dev/null || true
+echo "✅ debian-mongodb concluído!"
+```
+</details>
+
+---
+
+### 📌 Boas Práticas de Uso
+1. **Execução seletiva:** `sudo ./fedora-php.sh` ou `sudo ./debian-mongodb.sh`
+2. **Dependências cruzadas:** Scripts de DB podem falhar se `curl`/`wget` não existirem. Rode `*-essentials.sh` primeiro ou adapte conforme necessidade.
+3. **Variáveis de ambiente:** Após scripts de `node`, `rust` ou `go`, execute `source ~/.bashrc` ou reinicie o terminal.
+4. **Idempotência:** Todos usam `2>/dev/null || true` nas configurações de senha e `initdb` para permitir reexecução sem quebrar.
+5. **Arquivar:** Você pode organizar tudo em `/opt/setup-scripts/` e criar um `run-all.sh` com `bash /opt/setup-scripts/fedora-*.sh` se quiser instalar tudo de uma vez.
+
+Se precisar de ajustes de firewall (`firewalld`/`ufw`), configurações de `nginx.conf` para PHP-FPM ou proxy reverso, é só avisar.
+
+### USER
+Quantos .sh deu?
+
+### ASSISTANT
+Deu exatamente **40 scripts `.sh`** (10 por distribuição).
+
+A estrutura se repete para cada distro (`fedora-*`, `arch-*`, `opensuse-*`, `debian-*`):
+1. `essentials.sh`
+2. `nginx.sh`
+3. `node-nvm.sh`
+4. `php.sh`
+5. `rust.sh`
+6. `go.sh`
+7. `python.sh`
+8. `mysql.sh`
+9. `postgresql.sh`
+10. `mongodb.sh`
+
