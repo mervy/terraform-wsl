@@ -1,0 +1,65 @@
+# Sai imediatamente se não for sessão interativa
+[[ $- == *i* ]] || return
+#
+# ~/.bashrc
+#
+
+# Função para parsear o branch do git
+function parse_git_branch() {
+    git branch 2> /dev/null | sed -e '/^[^*]/d' -e 's/* \(.*\)/(\1)/'
+}
+#!/bin/bash
+cwd=`pwd`
+current_username=`whoami`
+export $current_username
+export HISTSIZE=99999
+export HISTFILESIZE=99999
+# prompt
+FMT_BOLD="\[\e[1m\]"
+FMT_DIM="\[\e[2m\]"
+FMT_RESET="\[\e[0m\]"
+FMT_UNBOLD="\[\e[22m\]"
+FMT_UNDIM="\[\e[22m\]"
+FG_BLACK="\[\e[30m\]"
+FG_BLUE="\[\e[34m\]"
+FG_CYAN="\[\e[36m\]"
+FG_GREEN="\[\e[32m\]"
+FG_YELLOW="\[\e[33m\]"
+FG_GREY="\[\e[37m\]"
+FG_MAGENTA="\[\e[35m\]"
+FG_RED="\[\e[31m\]"
+FG_WHITE="\[\e[97m\]"
+BG_BLACK="\[\e[40m\]"
+BG_BLUE="\[\e[44m\]"
+BG_CYAN="\[\e[46m\]"
+BG_GREEN="\[\e[42m\]"
+BG_YELLOW="\[\e[43m\]"
+BG_MAGENTA="\[\e[45m\]"
+
+PS1="\n ${FG_BLUE}╭─" # begin arrow to prompt
+PS1+="${FG_MAGENTA}◀" # begin USERNAME container
+PS1+="${BG_MAGENTA}${FG_CYAN}${FMT_BOLD} ☕ " # print OS icon
+PS1+="${FG_WHITE}\u" # print username
+PS1+="${FG_YELLOW}${BG_CYAN}@\h" # print hostname
+PS1+="${FMT_UNBOLD}${FMT_BOLD} ${FG_MAGENTA}${BG_BLUE}▶ " # end USERNAME container / begin DIRECTORY container
+PS1+="${FG_GREY}\W " # print directory
+#PS1+="${FG_BLUE}${BG_CYAN}▶ " # end DIRECTORY container / begin FILES container
+PS1+="${FMT_RESET}"
+PS1+="\$(git branch 2> /dev/null | grep '^*' | colrm 1 2 | xargs -I BRANCH echo -n \"" # check if git branch exists
+PS1+="${BG_YELLOW}▶ " # end FILES container / begin BRANCH container
+PS1+="${FG_WHITE}🔀${FMT_BOLD} BRANCH " # print current git branch
+PS1+="${FMT_RESET}${FG_YELLOW}\")▶\n " # end last container (either FILES or BRANCH)
+PS1+="${FG_BLUE}╰❯ " # end arrow to prompt
+PS1+="${FG_CYAN} λ " # print prompt
+PS1+="${FMT_RESET}"
+export PS1
+
+function lscolor() {
+while IFS=$'\t' read -r -d '' perms name
+do
+    echo "${perms:0:1}$(tput bold; tput setaf 1)${perms:1:3}$(tput setaf 4)${perms:4:3}$(tput setaf 2)${perms:7:3}$(tput sgr0) ${name}"
+done < <(find . -maxdepth 1 -printf "%M\t%f\0")
+}
+alias ll="lscolor"
+
+fastfetch

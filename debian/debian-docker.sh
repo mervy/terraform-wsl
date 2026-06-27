@@ -1,0 +1,47 @@
+#!/usr/bin/env bash
+# debian-docker.sh — Docker Engine no WSL (Debian)
+set -e
+
+echo "==> Instalando Docker Engine..."
+curl -fsSL https://get.docker.com | sudo sh
+
+echo "==> Adicionando usuário atual ao grupo docker..."
+sudo usermod -aG docker $USER
+
+echo ""
+echo "========================================="
+echo " Docker instalado!"
+echo " Para usar sem sudo, reinicie o shell ou execute:"
+echo "   newgrp docker"
+echo ""
+echo " Verificar instalação:"
+echo "   docker run hello-world"
+echo "========================================="
+echo ""
+echo "=== Comandos essenciais ==="
+echo ""
+echo "  # Subir stack em background"
+echo "  docker compose up -d"
+echo ""
+echo "  # Ver containers rodando"
+echo "  docker compose ps"
+echo "  docker ps"
+echo ""
+echo "  # Ver logs de um serviço"
+echo "  docker compose logs -f web"
+echo ""
+echo "  # Parar tudo"
+echo "  docker compose down"
+echo ""
+echo "  # Parar e apagar volumes (reset total)"
+echo "  docker compose down -v"
+echo ""
+echo "  # Entrar num container"
+echo "  docker compose exec web bash"
+echo "  docker compose exec db mysql -u root -p"
+echo ""
+echo "  # Ver uso de recursos"
+echo "  docker stats"
+echo ""
+echo "  # Limpar tudo que não está em uso (cuidado)"
+echo "  docker system prune -a"
