@@ -20,7 +20,6 @@ gpgkey=https://www.mongodb.org/static/pgp/server-8.0.asc
 EOF
 dnf install -y mongodb-org mongodb-mongosh mongodb-org-tools
 systemctl enable --now mongod
-sleep 3
 
 # ── Aguardar mongod estar pronto ─────────────────────────────
 echo "==> Aguardando mongod aceitar conexões..."
@@ -32,23 +31,19 @@ for i in $(seq 1 30); do
   sleep 1
 done
 
-# ── Criar usuário admin (sem autenticação ativa ainda) ──────
-echo "==> Criando usuário admin (senha: ${MONGODB_ADMIN_PASS})..."
-mongosh --quiet --eval "
-  use admin;
-  db.createUser({
+# ── Criar usuário admin via process.env (evita interpolação de senha no JS) ──
+echo "==> Criando usuário admin..."
+MONGODB_ADMIN_PASS="$MONGODB_ADMIN_PASS" mongosh --quiet --eval "
+  db.getSiblingDB('admin').createUser({
     user: 'admin',
-    pwd: '"${MONGODB_ADMIN_PASS}"',
+    pwd: process.env.MONGODB_ADMIN_PASS,
     roles: [
       { role: 'userAdminAnyDatabase', db: 'admin' },
       { role: 'readWriteAnyDatabase', db: 'admin' },
       'root'
     ]
   })
-" 2>/dev/null || mongosh --quiet /dev/stdin <<JSEOF
-use admin;
-db.createUser({user:'admin',pwd:'"${MONGODB_ADMIN_PASS}"',roles:['root']})
-JSEOF
+" 2>/dev/null || true
 
 echo "   Usuário admin criado."
 

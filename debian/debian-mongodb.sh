@@ -13,25 +13,30 @@ echo "deb [ signed-by=/usr/share/keyrings/mongodb-server-8.3.gpg ] https://repo.
 apt update
 apt install -y mongodb-org mongodb-mongosh mongodb-org-tools
 systemctl enable --now mongod
-sleep 3
 
-# ── Criar usuário admin ──────────────────────────────────────
+# Aguardar mongod estar pronto
+echo "==> Aguardando mongod aceitar conexões..."
+for i in $(seq 1 30); do
+  if mongosh --quiet --eval "db.runCommand({ping:1})" &>/dev/null; then
+    echo "   mongod respondeu após ${i}s"
+    break
+  fi
+  sleep 1
+done
+
+# Criar usuário admin via process.env (evita interpolação de senha no JS)
 echo "==> Criando usuário admin..."
-mongosh --quiet --eval "
-  use admin;
-  db.createUser({
+MONGODB_ADMIN_PASS="$MONGODB_ADMIN_PASS" mongosh --quiet --eval "
+  db.getSiblingDB('admin').createUser({
     user: 'admin',
-    pwd: '"${MONGODB_ADMIN_PASS}"',
+    pwd: process.env.MONGODB_ADMIN_PASS,
     roles: [
       { role: 'userAdminAnyDatabase', db: 'admin' },
       { role: 'readWriteAnyDatabase', db: 'admin' },
       'root'
     ]
   })
-" 2>/dev/null || mongosh --quiet /dev/stdin <<JSEOF
-use admin;
-db.createUser({user:'admin',pwd:'"${MONGODB_ADMIN_PASS}"',roles:['root']})
-JSEOF
+" 2>/dev/null || true
 
 # ── Ativar autenticação ─────────────────────────────────────
 echo "==> Ativando autenticação obrigatória..."

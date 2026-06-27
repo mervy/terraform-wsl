@@ -1,13 +1,14 @@
 #!/usr/bin/env bash
 # debian-base.sh — configuração inicial do Debian no WSL
-set -e
+set -euo pipefail
 export DEBIAN_FRONTEND=noninteractive
+[[ $EUID -ne 0 ]] && { echo "❌ Execute com sudo"; exit 1; }
 
 echo "==> Atualizando sistema..."
-sudo apt update && sudo apt upgrade -y
+apt update && apt upgrade -y
 
 echo "==> Instalando utilitários base..."
-sudo apt install -y \
+apt install -y \
   curl wget git unzip zip \
   build-essential ca-certificates gnupg \
   apt-transport-https \

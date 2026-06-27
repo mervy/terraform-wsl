@@ -22,8 +22,10 @@ dnf install -y postgresql18-server postgresql18
 systemctl enable --now postgresql-18
 sleep 3
 
-# Configurar usuários com senha do .env
-sudo -u postgres psql -c "ALTER USER postgres PASSWORD '"${POSTGRES_ADMIN_PASS}"';" 2>/dev/null || true
-sudo -u postgres psql -c "CREATE ROLE admin WITH LOGIN SUPERUSER PASSWORD '"${POSTGRES_ADMIN_PASS}"';" 2>/dev/null || true
+# Configurar usuários com psql variable binding (evita interpolação de senha no SQL)
+sudo -u postgres psql -v "pass=$POSTGRES_ADMIN_PASS" \
+  -c "ALTER USER postgres PASSWORD :'pass';" 2>/dev/null || true
+sudo -u postgres psql -v "pass=$POSTGRES_ADMIN_PASS" \
+  -c "CREATE ROLE admin WITH LOGIN SUPERUSER PASSWORD :'pass';" 2>/dev/null || true
 
 echo "PostgreSQL 18 instalado."

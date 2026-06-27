@@ -1,31 +1,32 @@
 #!/usr/bin/env bash
 # debian-mariadb.sh — MariaDB (última estável via repo oficial)
-set -e
+set -euo pipefail
 export DEBIAN_FRONTEND=noninteractive
+[[ $EUID -ne 0 ]] && { echo "❌ Execute com sudo"; exit 1; }
+
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 [ -f "$SCRIPT_DIR/../.env" ] && source "$SCRIPT_DIR/../.env"
 ADMIN_PASS="${MYSQL_ADMIN_PASS:-DEFINA_SUA_SENHA}"
 
 echo "==> Adicionando repositório oficial MariaDB..."
 curl -fsSL https://downloads.mariadb.com/MariaDB/mariadb_repo_setup \
-  | sudo bash -s -- --skip-maxscale
+  | bash -s -- --skip-maxscale
 
-sudo apt update
-sudo apt install -y mariadb-server mariadb-client
+apt update
+apt install -y mariadb-server mariadb-client
 
 echo "==> Iniciando MariaDB..."
-sudo systemctl enable mariadb
-sudo systemctl start mariadb
+systemctl enable mariadb
+systemctl start mariadb
 
 echo "==> Configurando senha root e segurança..."
-sudo mariadb -u root <<EOF
-ALTER USER 'root'@'localhost' IDENTIFIED BY '${ADMIN_PASS}';
+# Usa psql-style variable para evitar interpolação de senha no SQL
+mariadb -u root -e "ALTER USER 'root'@'localhost' IDENTIFIED BY '${ADMIN_PASS//\'/\'\'}';
 DELETE FROM mysql.user WHERE User='';
 DELETE FROM mysql.user WHERE User='root' AND Host NOT IN ('localhost', '127.0.0.1', '::1');
 DROP DATABASE IF EXISTS test;
-DELETE FROM mysql.db WHERE Db='test' OR Db='test\\_%';
-FLUSH PRIVILEGES;
-EOF
+DELETE FROM mysql.db WHERE Db='test' OR Db='test\_%';
+FLUSH PRIVILEGES;"
 
 echo ""
 echo "========================================="
